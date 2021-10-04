@@ -1,0 +1,26 @@
+version: "3.7"
+
+services:
+  db:
+    image: postgres
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: card_manager
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: card_manager
+
+
+  api:
+    build:
+      context: .
+      target: DevServer
+    ports:
+      - 8585:8585
+    depends_on:
+      - db
+    env_file: .env
+    volumes:
+      - ./:/code
+    stdin_open: true
+    tty: true

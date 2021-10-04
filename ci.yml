@@ -1,0 +1,54 @@
+.card-manager:
+  variables:
+    DOCKER_BUILDKIT: 1
+    COMPOSE_DOCKER_CLI_BUILD: 1
+    CHANGES_RULE: ~/match_it/**/*
+  before_script:
+    - ENVFILE=infrastructure/pipeline/${CI_COMMIT_REF_NAME}.env && test -f $ENVFILE && source $ENVFILE
+    - export VERSION=`cat cacheinterno/version.null`
+    - export SERVICE_FOLDER=~/match_it
+    - export SERVICE_TAG=card-manager
+
+test-card-manager:
+  extends:
+    - .card-manager
+    - .test
+  script:
+    - echo "write some tests..."
+
+build-card-manager:
+  extends:
+    - .card-manager
+    - .build
+
+push-card-manager:
+  extends:
+    - .card-manager
+    - .push
+
+rollout-card-manager:
+  extends:
+    - .card-manager
+    - .rollout
+
+.card-manager-rollout:
+  script:
+    - docker login -u $REGISTRY_USER -p $REGISTRY_PASS $REGISTRY_ADDRESS
+    - sleep 5; docker pull $REGISTRY/msets/$SERVICE_TAG:$VERSION && docker rmi $REGISTRY/msets/$SERVICE_TAG:$VERSION || exit 1
+    - mkdir -p $HOME/.kube
+    - echo -n $KUBE_CONFIG | base64 -d > $HOME/.kube/config
+    - helm upgrade --install $DEPLOYMENT ./infrastructure/helm/ -f $SERVICE_FOLDER/helm/$VALUES_FILE --namespace=$NAMESPACE --set image.tag=$VERSION
+
+rollout-card-manager-api:
+  before_script:
+    - ENVFILE=infrastructure/pipeline/${CI_COMMIT_REF_NAME}.env && test -f $ENVFILE && source $ENVFILE
+    - export VERSION=`cat cacheinterno/version.null`
+    - export SERVICE_FOLDER=~/match_it
+    - export SERVICE_TAG=card-manager
+    - export DEPLOYMENT=card-manager-api
+    - export VALUES_FILE=$ENVIRONMENT/$DEPLOYMENT.yml
+  extends:
+    - .card-manager
+    - .rollout
+    - .card-manager-rollout
+

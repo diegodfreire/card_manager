@@ -1,0 +1,6 @@
+[coverage:run]
+source = .
+omit = */migrations/*
+
+[coverage:report]
+omit = */tests/*,card_manager/wsgi.py

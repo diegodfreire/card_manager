@@ -1,0 +1,8 @@
+app:
+  name: card_manager-api
+  environment: prod
+  command: ./start-dev.sh
+  secrets:
+  - rabbitmq
+  - sentry
+replicaCount: 0 
